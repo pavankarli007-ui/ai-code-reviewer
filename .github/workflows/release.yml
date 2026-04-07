@@ -1,0 +1,78 @@
+name: Release & Publish
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # triggers on tags like v1.0.0, v1.2.3
+
+jobs:
+  release:
+    name: Build, Package & Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to create GitHub releases
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Compile TypeScript
+        run: npm run compile
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Bump package.json version
+        run: |
+          npm version ${{ steps.version.outputs.VERSION }} --no-git-tag-version
+
+      - name: Package extension (.vsix)
+        run: npx vsce package --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Get .vsix filename
+        id: vsix
+        run: echo "VSIX=$(ls *.vsix)" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.vsix.outputs.VSIX }}
+          body: |
+            ## AI Code Reviewer ${{ steps.version.outputs.VERSION }}
+
+            ### Install
+            1. Download the `.vsix` file below
+            2. In VS Code: `Extensions → ⋯ → Install from VSIX`
+
+            Or install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=your-publisher-id.ai-code-reviewer)
+
+            ### What's new
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          draft: false
+          prerelease: false
+
+      - name: Publish to VS Code Marketplace
+        run: npx vsce publish --no-dependencies
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to Open VSX (open source alternative marketplace)
+        run: npx ovsx publish *.vsix --pat ${{ secrets.OVSX_PAT }}
+        continue-on-error: true   # don't fail if Open VSX publish fails
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}

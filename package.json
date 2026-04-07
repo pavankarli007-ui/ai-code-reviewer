@@ -1,0 +1,122 @@
+{
+  "name": "ai-code-reviewer",
+  "displayName": "AI Code Reviewer",
+  "description": "Streaming AI-powered code review inside VS Code. Reviews your git diff for security vulnerabilities, performance issues and code quality — powered by Claude Opus — before you open a PR.",
+  "version": "1.0.0",
+  "publisher": "your-publisher-id",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "code review",
+    "claude",
+    "anthropic",
+    "security",
+    "react",
+    "typescript",
+    "git",
+    "diff",
+    "productivity"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/ai-code-reviewer"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/ai-code-reviewer/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/ai-code-reviewer#readme",
+  "license": "MIT",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ai-code-reviewer.review",
+        "title": "AI Code Reviewer: Review my changes",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "ai-code-reviewer.clear",
+        "title": "AI Code Reviewer: Clear all highlights"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "ai-code-reviewer.review",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "editorFocus"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "ai-code-reviewer.review",
+          "group": "navigation",
+          "when": "editorFocus"
+        }
+      ],
+      "commandPalette": [
+        { "command": "ai-code-reviewer.review" },
+        { "command": "ai-code-reviewer.clear" }
+      ]
+    },
+    "configuration": {
+      "title": "AI Code Reviewer",
+      "properties": {
+        "aiCodeReviewer.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Your Anthropic API key. [Get one free at console.anthropic.com](https://console.anthropic.com)",
+          "order": 1
+        },
+        "aiCodeReviewer.model": {
+          "type": "string",
+          "default": "claude-opus-4-6",
+          "enum": ["claude-opus-4-6", "claude-sonnet-4-6"],
+          "enumDescriptions": [
+            "Most intelligent — catches subtle issues (recommended)",
+            "Faster and cheaper — great for large diffs"
+          ],
+          "markdownDescription": "The Claude model to use for reviews.",
+          "order": 2
+        },
+        "aiCodeReviewer.maxDiffSize": {
+          "type": "number",
+          "default": 20000,
+          "markdownDescription": "Maximum characters of diff to send for review. Larger = more thorough but slower.",
+          "order": 3
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts --max-warnings 0",
+    "test": "node ./dist/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^2.19.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}
