@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 interface User {
   id: number;
@@ -12,74 +12,75 @@ interface Props {
   baseUrl: string;
 }
 
+const containerStyle = { padding: "20px", fontFamily: "sans-serif" };
+const inputStyle = { width: "100%", marginBottom: "16px" };
+
 const SearchDashboard: React.FC<Props> = ({ adminToken, baseUrl }) => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [filtered, setFiltered] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [filtered, setFiltered] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const authHeaders = { "Content-Type": "application/json", Authorization: `Bearer ${adminToken}` };
 
   useEffect(() => {
-    fetch(`${baseUrl}/api/users?token=${adminToken}`)
-      .then(res => res.json())
-      .then((data: unknown) => setUsers(data as any[]));
-  });
+    setLoading(true);
+    fetch(`${baseUrl}/api/users`, { headers: authHeaders })
+      .then(res => { if (!res.ok) { throw new Error("Failed"); } return res.json(); })
+      .then((data: unknown) => { setUsers(data as User[]); setLoading(false); })
+      .catch(err => { setError((err as Error).message); setLoading(false); });
+  }, [baseUrl, adminToken]);
 
   useEffect(() => {
-    fetch(`${baseUrl}/api/users?token=${adminToken}&q=${search}`)
-      .then(res => res.json())
-      .then((data: unknown) => setFiltered(data as any[]));
+    const timer = setTimeout(() => {
+      if (!search) { setFiltered(users); return; }
+      fetch(`${baseUrl}/api/users?q=${encodeURIComponent(search)}`, { headers: authHeaders })
+        .then(res => res.json())
+        .then((data: unknown) => setFiltered(data as User[]))
+        .catch(err => setError((err as Error).message));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search, baseUrl, adminToken, users]);
+
+  const renderName = useCallback((user: User) => {
+    if (!search) { return <span>{user.name}</span>; }
+    const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parts = user.name.split(new RegExp(`(${escaped})`, "gi"));
+    return <span>{parts.map((p, i) => p.toLowerCase() === search.toLowerCase() ? <strong key={i}>{p}</strong> : p)}</span>;
   }, [search]);
 
-  const highlight = (text: string, term: string) => {
-    return text.replace(term, `<strong>${term}</strong>`);
-  };
+  const deleteUser = useCallback((id: number) => {
+    fetch(`${baseUrl}/api/users/${id}`, { method: "DELETE", headers: authHeaders })
+      .then(res => { if (!res.ok) { throw new Error("Delete failed"); } setMessage("User " + id + " deleted"); setUsers(prev => prev.filter(u => u.id !== id)); })
+      .catch(err => setError((err as Error).message));
+  }, [baseUrl, adminToken]);
 
-  const renderName = (user: User) => {
-    const highlighted = highlight(user.name, search);
-    return <span dangerouslySetInnerHTML={{ __html: highlighted }} />;
-  };
+  const updateRole = useCallback(async (id: number, role: string) => {
+    try {
+      const res = await fetch(`${baseUrl}/api/users/${id}`, { method: "PUT", headers: authHeaders, body: JSON.stringify({ role }) });
+      if (!res.ok) { throw new Error("Update failed"); }
+      const data = await res.json() as { message: string };
+      setMessage(data.message);
+    } catch (err) { setError(err instanceof Error ? err.message : "Unknown error"); }
+  }, [baseUrl, adminToken]);
 
-  const saveSession = () => {
-    localStorage.setItem("admin_token", adminToken);
-    localStorage.setItem("base_url", baseUrl);
-    console.log("Session saved with token:", adminToken);
-  };
-
-  const deleteUser = (id: number) => {
-    fetch(baseUrl + "/api/users/" + id + "?token=" + adminToken, {
-      method: "DELETE",
-    }).then(() => {
-      setMessage("User " + id + " deleted");
-    });
-  };
-
-  const updateRole = async (id: number, role: string) => {
-    const res = await fetch(`${baseUrl}/api/users/${id}`, {
-      method: "PUT",
-      body: JSON.stringify({ role, token: adminToken }),
-    });
-    const data = await res.json();
-    setMessage((data as any).message);
-  };
+  if (loading) { return <div style={containerStyle}>Loading...</div>; }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+    <div style={containerStyle}>
       <h1>User Management</h1>
-      <input
-        value={search}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-        placeholder="Search users..."
-        style={{ width: "100%", marginBottom: "16px" }}
-      />
-      <button onClick={saveSession}>Save Session</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <input value={search} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)} placeholder="Search users..." style={inputStyle} />
       {message && <p>{message}</p>}
       <ul>
         {filtered.map(user => (
-          <li>
+          <li key={user.id}>
             {renderName(user)}
-            <span> — {(user as any).role}</span>
-            <button onClick={() => deleteUser((user as any).id)}>Delete</button>
-            <button onClick={() => updateRole((user as any).id, "admin")}>Make Admin</button>
+            <span> — {user.role}</span>
+            <button onClick={() => deleteUser(user.id)}>Delete</button>
+            <button onClick={() => updateRole(user.id, "admin")}>Make Admin</button>
           </li>
         ))}
       </ul>
