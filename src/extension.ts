@@ -21,6 +21,13 @@ export function activate(context: vscode.ExtensionContext) {
   clearBar.hide();
   context.subscriptions.push(clearBar);
 
+  const rerunBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
+  rerunBar.text = "$(refresh) Re-run Review";
+  rerunBar.command = "ai-code-reviewer.review";
+  rerunBar.tooltip = "Fix issues then click to re-run the review";
+  rerunBar.hide();
+  context.subscriptions.push(rerunBar);
+
   const reviewCommand = vscode.commands.registerCommand("ai-code-reviewer.review", async () => {
     const config = vscode.workspace.getConfiguration("aiCodeReviewer");
     const apiKey = config.get<string>("anthropicApiKey");
@@ -59,6 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     statusBar.text = "$(loading~spin) Reviewing...";
+    rerunBar.hide();
     decorationManager.clear();
     clearBar.hide();
 
@@ -67,6 +75,8 @@ export function activate(context: vscode.ExtensionContext) {
         decorationManager.addFinding(finding, root);
       },
       onDone: (grade) => {
+        rerunBar.text = "$(refresh) Re-run Review";
+        rerunBar.show();
         statusBar.text = `$(sparkle) AI Review  Grade: ${grade}`;
         clearBar.show();
       },
