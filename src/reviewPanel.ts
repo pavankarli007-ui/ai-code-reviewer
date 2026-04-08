@@ -72,6 +72,7 @@ export class ReviewPanel {
         try {
           d = execSync("git diff HEAD", { cwd: this._workspaceRoot, maxBuffer: 1024 * 1024 * 5 }).toString();
           if (!d.trim()) { d = execSync("git diff --cached", { cwd: this._workspaceRoot }).toString(); }
+          if (!d.trim()) { d = execSync("git diff HEAD~1", { cwd: this._workspaceRoot }).toString(); }
         } catch { vscode.window.showErrorMessage("Could not run git diff."); return; }
         if (!d.trim()) { vscode.window.showInformationMessage("No changes found."); return; }
         this._diff = d;
