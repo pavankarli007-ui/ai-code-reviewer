@@ -4,13 +4,24 @@
     "module": "commonjs",
     "target": "ES2020",
     "outDir": "./dist",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "sourceMap": true,
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", ".vscode-test", "demo-files", "dist", "scripts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "demo-files",
+    "dist",
+    "scripts"
+  ]
 }

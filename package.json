@@ -48,6 +48,10 @@
       {
         "command": "ai-code-reviewer.clear",
         "title": "AI Code Reviewer: Clear all highlights"
+      },
+      {
+        "command": "ai-code-reviewer.rerun",
+        "title": "AI Code Reviewer: Re-run review"
       }
     ],
     "keybindings": [
@@ -67,8 +71,12 @@
         }
       ],
       "commandPalette": [
-        { "command": "ai-code-reviewer.review" },
-        { "command": "ai-code-reviewer.clear" }
+        {
+          "command": "ai-code-reviewer.review"
+        },
+        {
+          "command": "ai-code-reviewer.clear"
+        }
       ]
     },
     "configuration": {
@@ -83,7 +91,10 @@
         "aiCodeReviewer.model": {
           "type": "string",
           "default": "claude-opus-4-6",
-          "enum": ["claude-opus-4-6", "claude-sonnet-4-6"],
+          "enum": [
+            "claude-opus-4-6",
+            "claude-sonnet-4-6"
+          ],
           "enumDescriptions": [
             "Most intelligent — catches subtle issues (recommended)",
             "Faster and cheaper — great for large diffs"
@@ -111,6 +122,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",

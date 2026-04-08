@@ -60,8 +60,6 @@ export class ReviewPanel {
     this._workspaceRoot = workspaceRoot;
     this._callbacks = callbacks;
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-
-    // Set HTML ONCE — never replace it again
     this._panel.webview.html = this._getFullHtml();
 
     this._panel.webview.onDidReceiveMessage(async (msg) => {
@@ -75,7 +73,7 @@ export class ReviewPanel {
           d = execSync("git diff HEAD", { cwd: this._workspaceRoot, maxBuffer: 1024 * 1024 * 5 }).toString();
           if (!d.trim()) { d = execSync("git diff --cached", { cwd: this._workspaceRoot }).toString(); }
         } catch { vscode.window.showErrorMessage("Could not run git diff."); return; }
-        if (!d.trim()) { vscode.window.showInformationMessage("No changes found in git diff."); return; }
+        if (!d.trim()) { vscode.window.showInformationMessage("No changes found."); return; }
         this._diff = d;
         this._runReview();
       }
@@ -106,7 +104,7 @@ export class ReviewPanel {
       if (this._callbacks) {
         this._doReview(this._diff, this._apiKey, this._model, this._maxDiffSize, this._callbacks);
       }
-    }, 300);
+    }, 500);
   }
 
   private _callApi(apiKey: string, model: string, content: string): Promise<string> {
@@ -157,15 +155,13 @@ export class ReviewPanel {
       const qual = findings.filter(f => f.type === "quality").length;
       const good = findings.filter(f => f.type === "good").length;
       const score = sec * 3 + perf + qual;
-      const grade = score === 0 ? "A+" : score <= 1 ? "A" : score <= 3 ? "B" : score <= 5 ? "C" : score <= 8 ? "D" : "F";
+      const grade = score === 0 ? "A+" : score <= 5 ? "A" : score <= 10 ? "B" : score <= 16 ? "C" : score <= 22 ? "D" : "F";
       const prevGrade = this._lastGrade;
       this._lastGrade = grade;
       this._runCount++;
       this._panel.webview.postMessage({
         command: "showResults",
-        findings,
-        grade,
-        prevGrade,
+        findings, grade, prevGrade,
         runCount: this._runCount,
         stats: { security: sec, performance: perf, quality: qual, good },
       });
@@ -188,20 +184,20 @@ export class ReviewPanel {
       + "*{box-sizing:border-box;margin:0;padding:0}"
       + "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground);height:100vh;display:flex;flex-direction:column;overflow:hidden}"
       + "#topbar{padding:10px 14px;border-bottom:1px solid rgba(128,128,128,.2);display:flex;align-items:center;gap:10px;background:var(--vscode-sideBar-background);flex-shrink:0}"
-      + "#grade{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;border:2px solid currentColor;transition:all .4s}"
-      + "#title-main{font-size:13px;font-weight:600;color:var(--vscode-editor-foreground)}"
+      + "#grade{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;border:2px solid #888;color:#888;transition:all .4s}"
+      + "#title-main{font-size:13px;font-weight:600}"
       + "#title-sub{font-size:11px;color:var(--vscode-descriptionForeground);margin-top:2px;min-height:14px}"
-      + "#rerun{padding:5px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:4px;font-size:11px;cursor:pointer;display:none;transition:opacity .15s}"
+      + "#rerun{padding:5px 12px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);border:none;border-radius:4px;font-size:11px;cursor:pointer;display:none}"
       + "#rerun:hover{opacity:.85}"
       + "#stats{display:none;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(128,128,128,.15);flex-shrink:0;border-bottom:1px solid rgba(128,128,128,.15)}"
       + ".stat{background:var(--vscode-sideBar-background);padding:8px 4px;text-align:center}"
-      + ".snum{font-size:18px;font-weight:700;line-height:1;transition:all .3s}"
+      + ".snum{font-size:18px;font-weight:700;line-height:1}"
       + ".slbl{font-size:9px;color:var(--vscode-descriptionForeground);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}"
       + "#body{flex:1;overflow-y:auto;padding:10px}"
       + "#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:20px}"
       + ".spinner{width:40px;height:40px;border-radius:50%;border:2px solid rgba(128,128,128,.2);border-top-color:var(--vscode-button-background);animation:spin .8s linear infinite}"
       + "@keyframes spin{to{transform:rotate(360deg)}}"
-      + ".ld-title{font-size:14px;font-weight:600;color:var(--vscode-editor-foreground)}"
+      + ".ld-title{font-size:14px;font-weight:600}"
       + ".ld-sub{font-size:12px;color:var(--vscode-descriptionForeground)}"
       + ".dots{display:flex;gap:6px}"
       + ".dot{width:6px;height:6px;border-radius:50%;background:var(--vscode-button-background);animation:dp 1.2s ease-in-out infinite}"
@@ -214,7 +210,7 @@ export class ReviewPanel {
       + ".card-head{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--vscode-sideBar-background)}"
       + ".cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}"
       + ".ctype{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}"
-      + ".ctitle{font-size:12px;font-weight:500;flex:1;margin-left:2px;color:var(--vscode-editor-foreground)}"
+      + ".ctitle{font-size:12px;font-weight:500;flex:1;margin-left:2px}"
       + ".cloc{font-family:monospace;font-size:10px;color:var(--vscode-descriptionForeground);background:rgba(128,128,128,.12);padding:2px 6px;border-radius:3px}"
       + ".card-body{padding:7px 10px;font-size:11px;color:var(--vscode-descriptionForeground);line-height:1.6}"
       + ".diff{margin-top:6px;border-radius:3px;overflow:hidden;font-family:monospace;font-size:10px}"
@@ -222,13 +218,12 @@ export class ReviewPanel {
       + ".dnew{padding:3px 8px;background:rgba(78,201,78,.1);color:#4ec94e}"
       + ".empty{text-align:center;padding:60px 20px;color:var(--vscode-descriptionForeground)}"
       + "#copybar{padding:8px 10px;border-top:1px solid rgba(128,128,128,.15);flex-shrink:0;background:var(--vscode-sideBar-background);display:none}"
-      + "#copybtn{display:block;width:100%;padding:8px;background:rgba(128,128,128,.08);color:var(--vscode-editor-foreground);border:1px solid rgba(128,128,128,.15);border-radius:4px;font-size:11px;cursor:pointer;transition:background .15s}"
-      + "#copybtn:hover{background:rgba(128,128,128,.15)}"
-      + ".prog-badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px;margin-left:6px;transition:all .3s}";
+      + "#copybtn{display:block;width:100%;padding:8px;background:rgba(128,128,128,.08);color:var(--vscode-editor-foreground);border:1px solid rgba(128,128,128,.15);border-radius:4px;font-size:11px;cursor:pointer}"
+      + "#copybtn:hover{background:rgba(128,128,128,.15)}";
 
-    const html = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>" + css + "</style></head><body>"
+    return "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><style>" + css + "</style></head><body>"
       + "<div id=\"topbar\">"
-      + "<div id=\"grade\" style=\"color:#888;border-color:#888\">-</div>"
+      + "<div id=\"grade\">-</div>"
       + "<div style=\"flex:1\"><div id=\"title-main\">AI Code Review</div><div id=\"title-sub\">Connecting to Claude...</div></div>"
       + "<button id=\"rerun\" onclick=\"doRerun()\">↻ Re-run</button>"
       + "</div>"
@@ -239,11 +234,7 @@ export class ReviewPanel {
       + "<div class=\"stat\"><div class=\"snum\" id=\"sgood\" style=\"color:#4ec94e\">0</div><div class=\"slbl\">Good</div></div>"
       + "</div>"
       + "<div id=\"body\">"
-      + "<div id=\"loading\">"
-      + "<div class=\"spinner\"></div>"
-      + "<div><div class=\"ld-title\">Reviewing your changes...</div><div class=\"ld-sub\">Claude is analysing your diff</div></div>"
-      + "<div class=\"dots\"><div class=\"dot\"></div><div class=\"dot\"></div><div class=\"dot\"></div></div>"
-      + "</div>"
+      + "<div id=\"loading\"><div class=\"spinner\"></div><div><div class=\"ld-title\">Reviewing your changes...</div><div class=\"ld-sub\">Claude is analysing your diff</div></div><div class=\"dots\"><div class=\"dot\"></div><div class=\"dot\"></div><div class=\"dot\"></div></div></div>"
       + "<div id=\"results\"></div>"
       + "</div>"
       + "<div id=\"copybar\"><button id=\"copybtn\" onclick=\"doCopy()\">Copy full review as PR comment</button></div>"
@@ -271,7 +262,7 @@ export class ReviewPanel {
       + "gb.textContent=g;gb.style.color=gc;gb.style.borderColor=gc;gb.style.background=gc+'18';"
       + "var baseLabel=f.length===0?'Perfect!':g==='F'?f.length+' issues found':g==='D'?'Needs work':g==='C'?'Room to improve':g==='B'?'Pretty good':'Nearly perfect';"
       + "var label=baseLabel;"
-      + "if(prev&&prev!==g&&rc>1){label='<span style=\"text-decoration:line-through;opacity:.5\">'+prev+'</span> → '+g+' · '+baseLabel;}"
+      + "if(prev&&prev!==g&&rc>1){label='<span style=\"text-decoration:line-through;opacity:.5\">'+prev+'</span> \u2192 '+g+' \u00b7 '+baseLabel;}"
       + "document.getElementById('title-sub').innerHTML=label;"
       + "document.getElementById('ssec').textContent=s.security;"
       + "document.getElementById('sperf').textContent=s.performance;"
@@ -283,19 +274,19 @@ export class ReviewPanel {
       + "var res=document.getElementById('results');"
       + "res.innerHTML='';"
       + "if(!f.length){"
-      + "res.innerHTML='<div class=\"empty\"><div style=\"font-size:40px;margin-bottom:12px\">✓</div><div style=\"font-size:15px;font-weight:600;margin-bottom:6px\">Clean diff!</div><div style=\"font-size:12px\">No issues found.</div></div>';"
+      + "res.innerHTML='<div class=\"empty\"><div style=\"font-size:40px;margin-bottom:12px\">\u2713</div><div style=\"font-size:15px;font-weight:600;margin-bottom:6px\">Clean diff!</div><div style=\"font-size:12px\">No issues found.</div></div>';"
       + "}else{"
       + "var hint=document.createElement('div');hint.className='hint';hint.textContent='Click any finding to jump to that line in your editor';res.appendChild(hint);"
       + "f.forEach(function(item){"
       + "var colors={security:'#f14c4c',performance:'#cca700',quality:'#569cd6',good:'#4ec94e'};"
-      + "var labels={security:'⚠ Security',performance:'⚡ Perf',quality:'◈ Quality',good:'✓ Good'};"
+      + "var labels={security:'\u26a0 Security',performance:'\u26a1 Perf',quality:'\u25c8 Quality',good:'\u2713 Good'};"
       + "var col=colors[item.type]||'#888';"
       + "var dh='';"
       + "if(item.before&&item.after){dh='<div class=\"diff\"><div class=\"dold\">- '+esc(item.before)+'</div><div class=\"dnew\">+ '+esc(item.after)+'</div></div>';}"
       + "var card=document.createElement('div');"
       + "card.className='card';"
       + "card.style.borderLeft='3px solid '+col;"
-      + "card.innerHTML='<div class=\"card-head\"><div class=\"cdot\" style=\"background:'+col+'\"></div><span class=\"ctype\" style=\"color:'+col+'\">'+(labels[item.type]||item.type)+'</span><span class=\"ctitle\">'+esc(item.title)+'</span><span class=\"cloc\">'+esc(item.file)+':'+item.line+' ↗</span></div><div class=\"card-body\">'+esc(item.message)+dh+'</div>';"
+      + "card.innerHTML='<div class=\"card-head\"><div class=\"cdot\" style=\"background:'+col+'\"></div><span class=\"ctype\" style=\"color:'+col+'\">'+(labels[item.type]||item.type)+'</span><span class=\"ctitle\">'+esc(item.title)+'</span><span class=\"cloc\">'+esc(item.file)+':'+item.line+' \u2197</span></div><div class=\"card-body\">'+esc(item.message)+dh+'</div>';"
       + "card.addEventListener('click',(function(fi){return function(){vscode.postMessage({command:'jumpToLine',file:fi.file,line:fi.line});};})(item));"
       + "res.appendChild(card);"
       + "});"
@@ -305,7 +296,7 @@ export class ReviewPanel {
       + "}"
       + "if(m.command==='showError'){"
       + "document.getElementById('loading').style.display='none';"
-      + "document.getElementById('results').innerHTML='<div style=\"margin:16px;padding:16px;border:1px solid rgba(241,76,76,.3);border-radius:6px;color:#f14c4c;font-size:12px\"><strong>Review failed</strong><p style=\"margin-top:8px;color:var(--vscode-descriptionForeground)\">'+esc(m.message)+'</p><p style=\"margin-top:8px;color:var(--vscode-descriptionForeground)\">Check your API key in Settings</p></div>';"
+      + "document.getElementById('results').innerHTML='<div style=\"margin:16px;padding:16px;border:1px solid rgba(241,76,76,.3);border-radius:6px;color:#f14c4c;font-size:12px\"><strong>Review failed</strong><p style=\"margin-top:8px;color:var(--vscode-descriptionForeground)\">'+esc(m.message)+'</p></div>';"
       + "document.getElementById('results').style.display='block';"
       + "document.getElementById('rerun').style.display='block';"
       + "}"
@@ -313,13 +304,11 @@ export class ReviewPanel {
       + "function doRerun(){vscode.postMessage({command:'rerun'});}"
       + "function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');}"
       + "function doCopy(){"
-      + "var lines=['## AI Code Review',''],o=['security','performance','quality','good'],lm={security:'⚠ Security',performance:'⚡ Performance',quality:'◈ Code Quality',good:'✓ Good'};"
-      + "o.forEach(function(t){var g=allFindings.filter(function(f){return f.type===t;});if(!g.length)return;lines.push('### '+lm[t]);g.forEach(function(f){lines.push('**'+f.title+'** — '+f.file+':'+f.line);lines.push(f.message);if(f.before&&f.after){lines.push('Before: '+f.before);lines.push('After: '+f.after);}lines.push('');});});"
-      + "navigator.clipboard.writeText(lines.join('\\n')).then(function(){var b=document.getElementById('copybtn');b.textContent='✓ Copied!';setTimeout(function(){b.textContent='Copy full review as PR comment';},2000);});"
+      + "var lines=['## AI Code Review',''],o=['security','performance','quality','good'],lm={security:'\u26a0 Security',performance:'\u26a1 Performance',quality:'\u25c8 Code Quality',good:'\u2713 Good'};"
+      + "o.forEach(function(t){var g=allFindings.filter(function(f){return f.type===t;});if(!g.length)return;lines.push('### '+lm[t]);g.forEach(function(f){lines.push('**'+f.title+'** \u2014 '+f.file+':'+f.line);lines.push(f.message);if(f.before&&f.after){lines.push('Before: '+f.before);lines.push('After: '+f.after);}lines.push('');});});"
+      + "navigator.clipboard.writeText(lines.join('\\n')).then(function(){var b=document.getElementById('copybtn');b.textContent='\u2713 Copied!';setTimeout(function(){b.textContent='Copy full review as PR comment';},2000);});"
       + "}"
       + "<\/script></body></html>";
-
-    return html;
   }
 
   public dispose() {

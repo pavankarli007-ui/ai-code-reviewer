@@ -10,23 +10,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
   statusBar.text = "$(sparkle) AI Review";
-  statusBar.tooltip = "Run AI Code Review  (Cmd+Shift+R)";
+  statusBar.tooltip = "Run AI Code Review (Cmd+Shift+R)";
   statusBar.command = "ai-code-reviewer.review";
   statusBar.show();
   context.subscriptions.push(statusBar);
-
-  const clearBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
-  clearBar.text = "$(close) Clear highlights";
-  clearBar.command = "ai-code-reviewer.clear";
-  clearBar.hide();
-  context.subscriptions.push(clearBar);
-
-  const rerunBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
-  rerunBar.text = "$(refresh) Re-run Review";
-  rerunBar.command = "ai-code-reviewer.review";
-  rerunBar.tooltip = "Fix issues then click to re-run the review";
-  rerunBar.hide();
-  context.subscriptions.push(rerunBar);
 
   const reviewCommand = vscode.commands.registerCommand("ai-code-reviewer.review", async () => {
     const config = vscode.workspace.getConfiguration("aiCodeReviewer");
@@ -54,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
     let diff = "";
     try {
       diff = execSync("git diff HEAD", { cwd: root, maxBuffer: 1024 * 1024 * 5 }).toString();
-      if (!diff.trim()) diff = execSync("git diff --cached", { cwd: root }).toString();
+      if (!diff.trim()) { diff = execSync("git diff --cached", { cwd: root }).toString(); }
     } catch {
       vscode.window.showErrorMessage("Could not run git diff. Is this a git repository?");
       return;
@@ -66,19 +53,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     statusBar.text = "$(loading~spin) Reviewing...";
-    rerunBar.hide();
-    decorationManager.clear();
-    clearBar.hide();
 
     ReviewPanel.createOrShow(context.extensionUri, diff, apiKey, model, maxDiffSize, root, {
       onFindingReceived: (finding) => {
         decorationManager.addFinding(finding, root);
       },
       onDone: (grade) => {
-        rerunBar.text = "$(refresh) Re-run Review";
-        rerunBar.show();
-        statusBar.text = `$(sparkle) AI Review  Grade: ${grade}`;
-        clearBar.show();
+        statusBar.text = "$(sparkle) AI Review  Grade: " + grade;
       },
       onError: () => {
         statusBar.text = "$(sparkle) AI Review";
@@ -88,7 +69,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   const clearCommand = vscode.commands.registerCommand("ai-code-reviewer.clear", () => {
     decorationManager.clear();
-    clearBar.hide();
     statusBar.text = "$(sparkle) AI Review";
   });
 
@@ -101,9 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
         const pos = new vscode.Position(Math.max(0, line - 1), 0);
         editor.selection = new vscode.Selection(pos, pos);
         editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
-      } catch {
-        // file might not exist in demo context
-      }
+      } catch { /* ignore */ }
     }
   );
 
