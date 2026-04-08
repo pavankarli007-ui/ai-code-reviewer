@@ -4,8 +4,8 @@
 
 One keyboard shortcut. Your git diff gets reviewed by the world's best AI engineer in real time — findings stream in live, problem lines light up in your editor, and you get a letter grade for your changes. All before you open a PR.
 
-[![CI](https://github.com/YOUR_USERNAME/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/ai-code-reviewer/actions/workflows/ci.yml)
-[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/your-publisher-id.ai-code-reviewer?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=your-publisher-id.ai-code-reviewer)
+[![CI](https://github.com/pavankarli007-ui/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)](https://github.com/pavankarli007-ui/ai-code-reviewer/actions/workflows/ci.yml)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/pavankarli.ai-code-reviewer?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=pavankarli.ai-code-reviewer)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -57,7 +57,7 @@ Press `Cmd+Shift+R` (Mac) or `Ctrl+Shift+R` (Windows):
 ### From source
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-code-reviewer.git
+git clone https://github.com/pavankarli007-ui/ai-code-reviewer.git
 cd ai-code-reviewer
 npm install && npm run compile
 # Press F5 to launch Extension Dev Host
