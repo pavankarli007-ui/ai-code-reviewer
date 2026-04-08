@@ -21,13 +21,13 @@ const SearchDashboard: React.FC<Props> = ({ adminToken, baseUrl }) => {
   useEffect(() => {
     fetch(`${baseUrl}/api/users?token=${adminToken}`)
       .then(res => res.json())
-      .then(data => setUsers(data));
+      .then((data: unknown) => setUsers(data as any[]));
   });
 
   useEffect(() => {
     fetch(`${baseUrl}/api/users?token=${adminToken}&q=${search}`)
       .then(res => res.json())
-      .then(data => setFiltered(data));
+      .then((data: unknown) => setFiltered(data as any[]));
   }, [search]);
 
   const highlight = (text: string, term: string) => {
@@ -67,7 +67,7 @@ const SearchDashboard: React.FC<Props> = ({ adminToken, baseUrl }) => {
       <h1>User Management</h1>
       <input
         value={search}
-        onChange={e => setSearch(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
         placeholder="Search users..."
         style={{ width: "100%", marginBottom: "16px" }}
       />
