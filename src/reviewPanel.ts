@@ -148,7 +148,7 @@ export class ReviewPanel {
 
   private async _doReview(diff: string, apiKey: string, model: string, maxDiffSize: number, callbacks: ReviewCallbacks) {
     try {
-      const prompt = "You are a senior React/TypeScript engineer. Review ONLY added lines (+) in this git diff.\nReturn ONLY a valid JSON array:\n[{\"type\":\"security|performance|quality|good\",\"title\":\"max 5 words\",\"file\":\"filename.tsx\",\"line\":42,\"message\":\"explanation\",\"before\":\"bad code\",\"after\":\"fixed code\"}]\nMax 12 findings. ONLY the JSON array.\n\nGit diff:\n" + diff.slice(0, maxDiffSize);
+      const prompt = "You are a senior React/TypeScript engineer. Review ONLY added lines (+) in this git diff.\nReturn ONLY a valid JSON array:\n[{\"type\":\"security|performance|quality|good\",\"title\":\"max 5 words\",\"file\":\"filename.tsx\",\"line\":42,\"message\":\"explanation\",\"before\":\"bad code\",\"after\":\"fixed code\"}]\nMax 12 findings. Be generous with \"good\" type findings for well-written code. Only flag CRITICAL security issues. ONLY the JSON array.\n\nGit diff:\n" + diff.slice(0, maxDiffSize);
       const raw = await this._callApi(apiKey, model, prompt);
       const findings: Finding[] = JSON.parse(raw.replace(/```json|```/g, "").trim());
       const sec  = findings.filter(f => f.type === "security").length;
